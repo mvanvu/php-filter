@@ -39,7 +39,11 @@ $source = [
 // Return ['Hello World!', 'Hello VietNam!']
 $filtered = Filter::clean($source, 'string');
 
+// Multi-type
+$source = '  <h1>Hello World!</h1>  ';
 
+// Return 'Hello World!'
+$filtered = Filter::clean($source, ['string', 'trim']);
 ```
 ## Filter types
 

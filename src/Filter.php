@@ -6,6 +6,18 @@ class Filter
 {
 	public static function clean($value, $type = 'string')
 	{
+		if (is_array($type))
+		{
+			$result = $value;
+
+			foreach ($type as $filterType)
+			{
+				$result = self::clean($result, $filterType);
+			}
+
+			return $result;
+		}
+
 		switch ($type)
 		{
 			case 'int':
