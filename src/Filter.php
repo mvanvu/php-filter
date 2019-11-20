@@ -12,7 +12,7 @@ class Filter
 
 			foreach ($type as $filterType)
 			{
-				$result = self::clean($result, $filterType);
+				$result = static::clean($result, $filterType);
 			}
 
 			return $result;
@@ -138,11 +138,11 @@ class Filter
 				break;
 
 			case 'slug':
-				$result = self::toSlug($value);
+				$result = static::toSlug($value);
 				break;
 
 			case 'path':
-				return self::toPath($value);
+				return static::toPath($value);
 				break;
 
 			case 'unset':
@@ -227,7 +227,7 @@ class Filter
 	{
 		$string = trim(preg_replace('/\s+/', '-', strtolower($string)), '-');
 		$string = array_map(function ($str) {
-			return self::stripMarks($str);
+			return static::stripMarks($str);
 		}, explode('-', $string));
 
 		$string = implode('-', $string);
@@ -240,7 +240,7 @@ class Filter
 	{
 		$path = trim(preg_replace('/\/+/', '/', strtolower($string)), '/');
 		$path = array_map(function ($str) {
-			return self::toSlug($str);
+			return static::toSlug($str);
 		}, explode('/', $path));
 
 		return implode('/', $path);
