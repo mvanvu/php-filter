@@ -172,6 +172,19 @@ class Filter
 				$result = array_unique($result);
 				$result = array_map('unserialize', $result);
 				break;
+			
+			case 'basicHtml':
+
+				if (is_array($value))
+				{
+					$result = array_map('MaiVu\\Php\\Filter::basicHtml', $value);
+				}
+				else
+				{
+					$result = static::basicHtml($value);
+				}
+
+				break;			
 
 			default:
 
@@ -244,5 +257,10 @@ class Filter
 		}, explode('/', $path));
 
 		return implode('/', $path);
+	}	
+
+	public static function basicHtml($htmlString)
+	{
+		return strip_tags($htmlString, '<p><span><div><br><h1><h2><h3><h4><h5><h6>');
 	}
 }
