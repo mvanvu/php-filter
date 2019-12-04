@@ -72,24 +72,6 @@ class Filter
 
 				break;
 
-			case 'boolean':
-
-				if (is_array($value))
-				{
-					$result = [];
-
-					foreach ($value as $eachString)
-					{
-						$result[] = (bool) $eachString;
-					}
-				}
-				else
-				{
-					$result = (bool) $value;
-				}
-
-				break;
-
 			case 'alphaNum':
 			case 'base64':
 				$pattern = 'alphaNum' === $type ? '/[^A-Z0-9]/i' : '/[^A-Z0-9\/+=]/i';
@@ -160,6 +142,20 @@ class Filter
 
 			case 'yesNo':
 				$result = in_array($value, ['Y', 'N'], true) ? $value : 'N';
+				break;
+
+			case 'bool':
+			case 'boolean':
+
+				if (is_array($value))
+				{
+					$result = array_map('boolval', $value);
+				}
+				else
+				{
+					$result = boolval($value);
+				}
+
 				break;
 
 			case 'inputName':
