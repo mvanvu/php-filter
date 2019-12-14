@@ -65,6 +65,7 @@ $filtered = Filter::clean($source, ['string', 'trim']);
 * yesNo (return 'Y' or 'N')
 * inputName (regex /[^a-zA-Z0-9_]/)
 * unique (array unique)
+* basicHtml
 
 ## Fallback default
 

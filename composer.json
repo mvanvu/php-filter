@@ -23,6 +23,5 @@
     "psr-4": {
       "MaiVu\\Php\\": "src/"
     }
-  },
-  "minimum-stability": "dev"
+  }
 }

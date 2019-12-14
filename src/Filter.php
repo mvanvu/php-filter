@@ -89,6 +89,7 @@ class Filter
 				{
 					$result = (string) preg_replace($pattern, '', $value);
 				}
+
 				break;
 
 			case 'string':
