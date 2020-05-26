@@ -160,7 +160,7 @@ class Filter
 				break;
 
 			case 'inputName':
-				$result = preg_replace('/[^a-zA-Z0-9_]/', '_', $value);
+				$result = preg_replace('/[^a-zA-Z0-9_\[\]]/', '_', $value);
 				break;
 
 			case 'unique':
@@ -169,7 +169,7 @@ class Filter
 				$result = array_unique($result);
 				$result = array_map('unserialize', $result);
 				break;
-			
+
 			case 'basicHtml':
 
 				if (is_array($value))
@@ -181,7 +181,7 @@ class Filter
 					$result = static::basicHtml($value);
 				}
 
-				break;			
+				break;
 
 			default:
 
@@ -205,6 +205,19 @@ class Filter
 		}
 
 		return $result;
+	}
+
+	public static function toSlug($string)
+	{
+		$string = trim(preg_replace('/\s+/', '-', strtolower($string)), '-');
+		$string = array_map(function ($str) {
+			return static::stripMarks($str);
+		}, explode('-', $string));
+
+		$string = implode('-', $string);
+		$string = preg_replace('/-+/', '-', $string);
+
+		return $string;
 	}
 
 	public static function stripMarks($str)
@@ -233,19 +246,6 @@ class Filter
 		return $str;
 	}
 
-	public static function toSlug($string)
-	{
-		$string = trim(preg_replace('/\s+/', '-', strtolower($string)), '-');
-		$string = array_map(function ($str) {
-			return static::stripMarks($str);
-		}, explode('-', $string));
-
-		$string = implode('-', $string);
-		$string = preg_replace('/-+/', '-', $string);
-
-		return $string;
-	}
-
 	public static function toPath($string)
 	{
 		$path = trim(preg_replace('/\/+/', '/', strtolower($string)), '/');
@@ -254,10 +254,13 @@ class Filter
 		}, explode('/', $path));
 
 		return implode('/', $path);
-	}	
+	}
 
 	public static function basicHtml($htmlString)
 	{
-		return strip_tags($htmlString, '<p><span><div><br><h1><h2><h3><h4><h5><h6>');
+		$allowTags = '<a><b><blockquote><code><del><dd><div><dl><dt><em><h1><h2><h3><h4><h5><h6><i>'
+			. '<img><kbd><li><ol><p><pre><s><span><sup><sub><strong><ul><br><hr>';
+
+		return strip_tags($htmlString, $allowTags);
 	}
 }
