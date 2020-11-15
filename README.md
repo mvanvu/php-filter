@@ -37,20 +37,41 @@ $source = [
 ];
 
 // Return ['Hello World!', 'Hello VietNam!']
-$filtered = Filter::clean($source, 'string');
+$filtered = Filter::clean($source, 'string:array');
 
 // Multi-type
 $source = '  <h1>Hello World!</h1>  ';
 
 // Return 'Hello World!'
 $filtered = Filter::clean($source, ['string', 'trim']);
+
 ```
+
+## Add new custom rule
+``` php
+use MaiVu\Php\Filter;
+Filter::setRule('custom', function($value) {
+    return $value . ' is filtered by a Closure';
+});
+
+$source = 'Hello World!';
+
+// Return 'Hello World! is filtered by a Closure'
+$filtered = Filter::clean($source, 'custom');
+
+// The same above
+Filter::clean($source, function($value) {
+    return $value . ' is filtered by a Closure';
+});
+
+```
+
 ## Filter types
 
 * int
-* uint (unsign int)
-* float
-* ufloat (unsign float)
+* uint (unsigned int)
+* float, double
+* ufloat, udouble (unsigned float)
 * boolean
 * alphaNum (alpha number string)
 * base64
@@ -62,7 +83,9 @@ $filtered = Filter::clean($source, ['string', 'trim']);
 * unset (return NULL value)
 * jsonEncode
 * jsonDecode
-* yesNo (return 'Y' or 'N')
+* yesNo, yes|no (return 'Y' or 'N')
+* YES|NO (return 'YES' or 'NO')
+* 1|0 (return 1 or 0)
 * inputName (regex /[^a-zA-Z0-9_]/)
 * unique (array unique)
 * basicHtml
@@ -71,20 +94,22 @@ $filtered = Filter::clean($source, ['string', 'trim']);
 
 ``` php
 
-if (function_exists($type))
-{
-	if (is_array($value))
-	{
-		$result = array_map($type, $value);
-	}
-	else
-	{
-		$result = $type($value);
-	}
-}
-else
-{
-	$result = $value;
+if (isset(static::$rules[$type]))
+    {
+        $result = call_user_func_array(static::$rules[$type], [$value]);
+    }
+    elseif (is_callable($type))
+    {
+	    $result = call_user_func_array($type, [$value]);
+    }
+    elseif (function_exists($type))
+    {
+        $result = $type($value);
+    }
+    else
+    {
+        $result = $value;
+    }
 }
 
 ```

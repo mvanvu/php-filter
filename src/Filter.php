@@ -2,8 +2,29 @@
 
 namespace MaiVu\Php;
 
+use Closure;
+
 class Filter
 {
+	protected static $rules = [];
+
+	public static function setRule($name, Closure $handler)
+	{
+		static::$rules[$name] = $handler;
+	}
+
+	public static function cleanArray(array $values, $type = 'string')
+	{
+		$result = [];
+
+		foreach ($values as $value)
+		{
+			$result[] = static::clean($value, $type);
+		}
+
+		return $result;
+	}
+
 	public static function clean($value, $type = 'string')
 	{
 		if (is_array($type))
@@ -18,56 +39,25 @@ class Filter
 			return $result;
 		}
 
+		if (preg_match('/:array$/', $type))
+		{
+			return static::cleanArray((array) $value, preg_replace('/:array$/', '', $type));
+		}
+
 		switch ($type)
 		{
 			case 'int':
-			case 'float':
-
-				$callBack = 'int' === $type ? 'intval' : 'floatval';
-
-				if (is_array($value))
-				{
-					$result = array_map($callBack, $value);
-				}
-				else
-				{
-					$result = $callBack($value);
-				}
-
-				break;
-
 			case 'uint':
-
-				if (is_array($value))
-				{
-					$result = [];
-
-					foreach ($value as $eachString)
-					{
-						$result[] = abs(intval($eachString));
-					}
-				}
-				else
-				{
-					$result = abs(intval($value));
-				}
-
-				break;
-
+			case 'float':
 			case 'ufloat':
+			case 'double':
+			case 'udouble':
+				$callback = 'int' === $type ? 'intval' : 'floatval';
+				$result   = $callback($value);
 
-				if (is_array($value))
+				if (strpos($type, 'u') === 0)
 				{
-					$result = [];
-
-					foreach ($value as $eachString)
-					{
-						$result[] = abs(floatval($eachString));
-					}
-				}
-				else
-				{
-					$result = abs(floatval($value));
+					$result = abs($result);
 				}
 
 				break;
@@ -75,21 +65,7 @@ class Filter
 			case 'alphaNum':
 			case 'base64':
 				$pattern = 'alphaNum' === $type ? '/[^A-Z0-9]/i' : '/[^A-Z0-9\/+=]/i';
-
-				if (is_array($value))
-				{
-					$result = [];
-
-					foreach ($value as $eachString)
-					{
-						$result[] = (string) preg_replace($pattern, '', $eachString);
-					}
-				}
-				else
-				{
-					$result = (string) preg_replace($pattern, '', $value);
-				}
-
+				$result  = (string) preg_replace($pattern, '', $value);
 				break;
 
 			case 'string':
@@ -104,28 +80,13 @@ class Filter
 					'encode' => FILTER_SANITIZE_ENCODED,
 				];
 
-				if (is_array($value))
-				{
-					$result = [];
-
-					foreach ($value as $eachString)
-					{
-						$result[] = filter_var($eachString, $filterMaps[$type]);
-					}
-				}
-				else
-				{
-					$result = filter_var($value, $filterMaps[$type]);
-				}
-
+				$result = filter_var($value, $filterMaps[$type]);
 				break;
 
 			case 'slug':
-				$result = static::toSlug($value);
-				break;
-
 			case 'path':
-				return static::toPath($value);
+				$callback = Filter::class . '::to' . ucfirst($type);
+				$result   = $callback($value);
 				break;
 
 			case 'unset':
@@ -137,25 +98,25 @@ class Filter
 				break;
 
 			case 'jsonDecode':
-
 				$result = is_array($value) ? $value : (json_decode($value, true) ?: []);
 				break;
 
 			case 'yesNo':
+			case 'yes|no':
 				$result = in_array($value, ['Y', 'N'], true) ? $value : 'N';
+				break;
+
+			case 'YES|NO':
+				$result = in_array($value, ['YES', 'NO'], true) ? $value : 'NO';
+				break;
+
+			case '1|0':
+				$result = in_array($value, ['1', '0']) ? (int) $value : 0;
 				break;
 
 			case 'bool':
 			case 'boolean':
-
-				if (is_array($value))
-				{
-					$result = array_map('boolval', $value);
-				}
-				else
-				{
-					$result = boolval($value);
-				}
+				$result = boolval($value);
 
 				break;
 
@@ -171,30 +132,23 @@ class Filter
 				break;
 
 			case 'basicHtml':
-
-				if (is_array($value))
-				{
-					$result = array_map('MaiVu\\Php\\Filter::basicHtml', $value);
-				}
-				else
-				{
-					$result = static::basicHtml($value);
-				}
+				$result = static::basicHtml($value);
 
 				break;
 
 			default:
 
-				if (function_exists($type))
+				if (isset(static::$rules[$type]))
 				{
-					if (is_array($value))
-					{
-						$result = array_map($type, $value);
-					}
-					else
-					{
-						$result = $type($value);
-					}
+					$result = call_user_func_array(static::$rules[$type], [$value]);
+				}
+				elseif (is_callable($type))
+				{
+					$result = call_user_func_array($type, [$value]);
+				}
+				elseif (function_exists($type))
+				{
+					$result = $type($value);
 				}
 				else
 				{
@@ -205,6 +159,16 @@ class Filter
 		}
 
 		return $result;
+	}
+
+	public static function basicHtml($htmlString)
+	{
+		return strip_tags($htmlString, '<a><b><blockquote><code><del><dd><div><dl><dt><em><h1><h2><h3><h4><h5><h6><i><img><kbd><li><ol><p><pre><s><span><sup><sub><strong><ul><br><hr>');
+	}
+
+	public static function toPath($string)
+	{
+		return implode('/', array_map(Filter::class . '::toSlug', explode('/', trim(preg_replace(['/\/+|\\\\+/', '/\/+/'], '/', strtolower($string)), '/'))));
 	}
 
 	public static function toSlug($string)
@@ -244,23 +208,5 @@ class Filter
 		$str = preg_replace('/[^a-zA-Z0-9-_]/', '', $str);
 
 		return $str;
-	}
-
-	public static function toPath($string)
-	{
-		$path = trim(preg_replace('/\/+/', '/', strtolower($string)), '/');
-		$path = array_map(function ($str) {
-			return static::toSlug($str);
-		}, explode('/', $path));
-
-		return implode('/', $path);
-	}
-
-	public static function basicHtml($htmlString)
-	{
-		$allowTags = '<a><b><blockquote><code><del><dd><div><dl><dt><em><h1><h2><h3><h4><h5><h6><i>'
-			. '<img><kbd><li><ol><p><pre><s><span><sup><sub><strong><ul><br><hr>';
-
-		return strip_tags($htmlString, $allowTags);
 	}
 }
