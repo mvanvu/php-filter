@@ -31,6 +31,7 @@ class CustomFilter extends Filter
 	{
 		return static::clean($value, 'int:array');
 	}
+
 }
 
 // Return '[1, 2, 3]'

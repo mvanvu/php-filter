@@ -85,7 +85,7 @@ class Filter
 
 			case 'slug':
 			case 'path':
-				$callback = Filter::class . '::to' . ucfirst($type);
+				$callback = static::class . '::to' . ucfirst($type);
 				$result   = $callback($value);
 				break;
 
@@ -172,7 +172,9 @@ class Filter
 
 	public static function toPath($string)
 	{
-		return implode('/', array_map(Filter::class . '::toSlug', explode('/', trim(preg_replace(['/\/+|\\\\+/', '/\/+/'], '/', strtolower($string)), '/'))));
+		$path = implode('/', array_map(static::class . '::toSlug', explode('/', trim(preg_replace(['/\/+|\\\\+/', '/\/+/'], '/', strtolower($string)), '/'))));
+
+		return trim($path, '/\\\\');
 	}
 
 	public static function toSlug($string)
@@ -185,7 +187,7 @@ class Filter
 		$string = implode('-', $string);
 		$string = preg_replace('/-+/', '-', $string);
 
-		return $string;
+		return trim($string, '/\\\\-');
 	}
 
 	public static function stripMarks($str)
