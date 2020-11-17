@@ -138,7 +138,11 @@ class Filter
 
 			default:
 
-				if (isset(static::$rules[$type]))
+				if (is_callable(static::class . '::' . $type))
+				{
+					$result = call_user_func_array(static::class . '::' . $type, [$value]);
+				}
+				elseif (isset(static::$rules[$type]))
 				{
 					$result = call_user_func_array(static::$rules[$type], [$value]);
 				}

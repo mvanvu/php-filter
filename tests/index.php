@@ -4,18 +4,34 @@ use MaiVu\Php\Filter;
 
 require_once dirname(__DIR__) . '/src/Filter.php';
 
-Filter::setRule('custom', function ($value) {
-	return 'CUSTOM';
-});
+// Example
+$source = '<h1>Hello World!</h1>';
 
-$closure = function ($value) {
-	return $value . ' is filtered by a Closure';
-};
+// Return 'Hello World!'
+$filtered = Filter::clean($source, 'string');
 
-echo '<pre>' . print_r(Filter::clean(1, '1|0:array'), true) . '</pre>';
+// Source array
+$source = [
+	'<h1>Hello World!</h1>',
+	'<h1>Hello Vietnam!</h1>',
+];
 
-echo '<pre>' . print_r(Filter::clean('a\\//b/', 'path'), true) . '</pre>';
+// Return ['Hello World!', 'Hello VietNam!']
+echo '<pre>' . print_r(Filter::clean($source, 'string:array'), true) . '</pre>';
 
-echo '<pre>' . print_r(Filter::clean('a\\//b/', 'custom'), true) . '</pre>';
+// Multi-type
+$source = '  <h1>Hello World!</h1>  ';
 
-echo '<pre>' . print_r(Filter::clean('a\\//b/', $closure), true) . '</pre>';
+// Return 'Hello World!'
+echo '<pre>' . print_r(Filter::clean($source, ['string', 'trim']), true) . '</pre>';
+
+class CustomFilter extends Filter
+{
+	public static function arrayInteger($value)
+	{
+		return static::clean($value, 'int:array');
+	}
+}
+
+// Return '[1, 2, 3]'
+echo '<pre>' . print_r(CustomFilter::clean(['1abc2', '2b', 3], 'arrayInteger'), true) . '</pre>';

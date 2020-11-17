@@ -66,6 +66,22 @@ Filter::clean($source, function($value) {
 
 ```
 
+## Extend filters
+```php
+use MaiVu\Php\Filter;
+
+class CustomFilter extends Filter
+{
+	public static function arrayInteger($value)
+	{
+		return static::clean($value, 'int:array');
+	}
+}
+
+// Return '[1, 2, 3]'
+echo '<pre>' . print_r(CustomFilter::clean(['1abc2', '2b', 3], 'arrayInteger'), true) . '</pre>';
+```
+
 ## Filter types
 
 * int
