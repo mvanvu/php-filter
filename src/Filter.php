@@ -138,17 +138,17 @@ class Filter
 
 			default:
 
-				if (is_callable(static::class . '::' . $type))
+				if (is_callable($type))
 				{
-					$result = call_user_func_array(static::class . '::' . $type, [$value]);
+					$result = call_user_func_array($type, [$value]);
 				}
 				elseif (isset(static::$rules[$type]))
 				{
 					$result = call_user_func_array(static::$rules[$type], [$value]);
 				}
-				elseif (is_callable($type))
+				elseif (is_callable(static::class . '::' . $type))
 				{
-					$result = call_user_func_array($type, [$value]);
+					$result = call_user_func_array(static::class . '::' . $type, [$value]);
 				}
 				elseif (function_exists($type))
 				{
@@ -174,7 +174,7 @@ class Filter
 	{
 		$path = implode('/', array_map(static::class . '::toSlug', explode('/', trim(preg_replace(['/\/+|\\\\+/', '/\/+/'], '/', strtolower($string)), '/'))));
 
-		return trim($path, '/\\\\');
+		return trim($path, '/\\\\.');
 	}
 
 	public static function toSlug($string)
