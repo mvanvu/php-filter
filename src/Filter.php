@@ -52,7 +52,7 @@ class Filter
 			case 'ufloat':
 			case 'double':
 			case 'udouble':
-				$callback = 'int' === $type ? 'intval' : 'floatval';
+				$callback = in_array($type, ['int', 'uint']) ? 'intval' : 'floatval';
 				$result   = $callback($value);
 
 				if (strpos($type, 'u') === 0)
